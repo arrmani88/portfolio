@@ -3,3 +3,5 @@ const App = () => {
 }
 
 export default App
+
+// spotlight/glow reveal
