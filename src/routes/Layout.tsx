@@ -1,12 +1,12 @@
 import { Outlet } from 'react-router-dom'
-import DotBackground from '../components/DotBackground'
-import ThemeToggle from '../components/ThemeToggle'
+// import DotBackground from '../components/DotBackground'
+import ShaderBackground from '../components/ShaderBackground'
+// import ThemeToggle from '../components/ThemeToggle'
 
 const Layout = () => {
   return (
     <>
-      <DotBackground />
-      <ThemeToggle />
+      <ShaderBackground />
       <Outlet />
     </>
   )
