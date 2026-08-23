@@ -2,6 +2,80 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
+:root {
+  --color-bg: #eef4ff;
+  --color-bg-elevated: #ffffff;
+  --color-primary: #0891b2;
+  --color-secondary: #2563eb;
+  --color-tertiary: #6366f1;
+  --color-text: #0b1220;
+  --color-text-muted: #52607a;
+  --color-border: rgba(37, 99, 235, 0.25);
+  --color-glow: rgba(37, 99, 235, 0.35);
+  --color-dot: rgba(37, 99, 235, 0.55);
+}
+
+.dark {
+  --color-bg: #030711;
+  --color-bg-elevated: #0b1220;
+  --color-primary: #00e5ff;
+  --color-secondary: #3b82f6;
+  --color-tertiary: #818cf8;
+  --color-text: #e6f1ff;
+  --color-text-muted: #7d8aa8;
+  --color-border: rgba(0, 229, 255, 0.3);
+  --color-glow: rgba(0, 229, 255, 0.55);
+  --color-dot: rgba(0, 229, 255, 0.35);
+}
+
 body {
   margin: 0;
+  background-color: var(--color-bg);
+  color: var(--color-text);
+}
+
+.dot-bg {
+  background-color: var(--color-bg);
+  overflow: hidden;
+  transition: background-color 0.3s ease;
+}
+
+.dot-bg-canvas {
+  position: absolute;
+  inset: 0;
+}
+
+.theme-toggle {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 50;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 999px;
+  border: 1px solid var(--color-border);
+  background-color: var(--color-bg-elevated);
+  color: var(--color-primary);
+  font-family: system-ui, sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  box-shadow: 0 0 12px var(--color-glow);
+  transition:
+    box-shadow 0.25s ease,
+    transform 0.15s ease,
+    background-color 0.3s ease,
+    color 0.3s ease;
+}
+
+.theme-toggle:hover {
+  box-shadow: 0 0 20px var(--color-glow);
+  transform: translateY(-1px);
+}
+
+.theme-toggle:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
 }
