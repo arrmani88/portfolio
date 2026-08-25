@@ -1,35 +1,29 @@
+@import url('https://fonts.googleapis.com/css2?family=Play&display=swap');
 @import 'tailwindcss';
 
-@custom-variant dark (&:where(.dark, .dark *));
+/* Theme: futuristic (default, active) */
+[data-theme='futuristic'] {
+  --font-primary: 'Play', ui-sans-serif, system-ui, sans-serif;
 
-:root {
-  --color-bg: #eef4ff;
-  --color-bg-elevated: #ffffff;
-  --color-primary: #0891b2;
-  --color-secondary: #2563eb;
-  --color-tertiary: #6366f1;
-  --color-text: #0b1220;
-  --color-text-muted: #52607a;
-  --color-border: rgba(37, 99, 235, 0.25);
-  --color-glow: rgba(37, 99, 235, 0.35);
-  --color-dot: rgba(37, 99, 235, 0.55);
-}
-
-.dark {
   --color-bg: #030711;
   --color-bg-elevated: #0b1220;
-  --color-primary: #00e5ff;
-  --color-secondary: #3b82f6;
-  --color-tertiary: #818cf8;
+  --color-primary: #00f0ff;
+  --color-secondary: #dd00ff;
+  --color-tertiary: #fed639;
   --color-text: #e6f1ff;
   --color-text-muted: #7d8aa8;
-  --color-border: rgba(0, 229, 255, 0.3);
-  --color-glow: rgba(0, 229, 255, 0.55);
-  --color-dot: rgba(0, 229, 255, 0.35);
+  --color-border: rgba(0, 240, 255, 0.3);
+  --color-glow: rgba(0, 240, 255, 0.55);
+  --color-dot: rgba(0, 240, 255, 0.35);
+}
+
+/* Theme: second (to be defined later) */
+[data-theme='second'] {
 }
 
 body {
   margin: 0;
+  font-family: var(--font-primary);
   background-color: var(--color-bg);
   color: var(--color-text);
 }
@@ -45,37 +39,41 @@ body {
   inset: 0;
 }
 
-.theme-toggle {
+.language-switcher {
   position: fixed;
-  top: 20px;
-  right: 20px;
+  top: 50%;
+  left: 0;
+  transform: translateY(-50%);
   z-index: 50;
-  display: inline-flex;
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  /* height: 30vh; */
+}
+
+.language-switcher button {
+  flex: 1;
+  display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 16px;
-  border-radius: 999px;
-  border: 1px solid var(--color-border);
-  background-color: var(--color-bg-elevated);
-  color: var(--color-primary);
-  font-family: system-ui, sans-serif;
-  font-size: 14px;
-  font-weight: 500;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  font-size: min(40vw, 45vh);
+  line-height: 1;
   cursor: pointer;
-  box-shadow: 0 0 12px var(--color-glow);
-  transition:
-    box-shadow 0.25s ease,
-    transform 0.15s ease,
-    background-color 0.3s ease,
-    color 0.3s ease;
 }
 
-.theme-toggle:hover {
-  box-shadow: 0 0 20px var(--color-glow);
-  transform: translateY(-1px);
-}
+@media (max-width: 640px) {
+  .language-switcher {
+    flex-direction: column;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 30vw;
+    height: 100%;
+  }
 
-.theme-toggle:focus-visible {
-  outline: 2px solid var(--color-primary);
-  outline-offset: 2px;
+  .language-switcher button {
+    font-size: min(20vw, 15vh);
+  }
 }

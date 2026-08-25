@@ -1,12 +1,24 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme="futuristic">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>portfolio</title>
     <script>
-      document.documentElement.classList.add('dark')
+      try {
+        var storedTheme = localStorage.getItem('theme')
+        if (['futuristic', 'second'].indexOf(storedTheme) !== -1) {
+          document.documentElement.setAttribute('data-theme', storedTheme)
+        }
+      } catch (e) {}
+      try {
+        var storedLanguage = localStorage.getItem('language')
+        if (['en', 'ar', 'de', 'fr'].indexOf(storedLanguage) !== -1) {
+          document.documentElement.lang = storedLanguage
+          document.documentElement.dir = storedLanguage === 'ar' ? 'rtl' : 'ltr'
+        }
+      } catch (e) {}
     </script>
   </head>
   <body>

@@ -8,54 +8,60 @@ void main() {
 }`
 
 const FRAGMENT_SHADER = `precision highp float;
+
 varying vec2 v_texCoord;
 uniform float u_time;
 uniform vec2 u_resolution;
 uniform vec2 u_mouse;
 
-float hash(vec2 p) {
-    p = fract(p * vec2(123.34, 456.21));
-    p += dot(p, p + 45.32);
-    return fract(p.x * p.y);
-}
+// Simple hash for pseudo-randomness
+float hash(float n) { return fract(sin(n) * 43758.5453123); }
 
 void main() {
     vec2 uv = v_texCoord;
     vec2 p = (gl_FragCoord.xy * 2.0 - u_resolution.xy) / min(u_resolution.y, u_resolution.x);
-    vec2 m = (u_mouse.xy * 2.0 - u_resolution.xy) / min(u_resolution.y, u_resolution.x);
 
-    // Deep navy background
-    vec3 color = vec3(0.01, 0.02, 0.08);
+    // Background color (Deep Space from Aetheric Minimalist)
+    vec3 color = vec3(0.075, 0.075, 0.082); // matches #131315 roughly
 
-    // Distant stars/particles
-    float stars = 0.0;
-    vec2 grid = floor(p * 25.0);
-    vec2 g_uv = fract(p * 25.0) - 0.5;
-    float h = hash(grid);
-    if(h > 0.98) {
-        float size = sin(u_time * 2.0 + h * 6.28) * 0.5 + 0.5;
-        stars = smoothstep(0.1 * size, 0.0, length(g_uv));
+    // Create multiple "blurred light" layers
+    for(float i = 1.0; i < 8.0; i++) {
+        float speed = 0.2 + i * 0.1;
+        float phase = u_time * speed + i * 123.456;
+
+        // Dynamic position for each light orb
+        vec2 pos = vec2(
+            sin(phase * 0.7) * 0.8,
+            cos(phase * 0.5) * 0.5
+        );
+
+        // Distance to the orb center
+        float d = length(p - pos);
+
+        // Neon Cyan accent color from design system: #00f0ff (0, 0.94, 1.0)
+        vec3 lightColor = vec3(0.0, 0.94, 1.0);
+
+        // Soft, blurred intensity falloff
+        float radius = 0.4 + sin(phase * 0.3) * 0.2;
+        float strength = 0.02 / (d * d / radius + 0.01);
+
+        // Add subtle variation in color/intensity per layer
+        color += lightColor * strength * (0.3 / i);
     }
-    color += vec3(0.4, 0.6, 1.0) * stars;
 
-    // Mouse glow
-    float mouse_dist = length(p - m);
-    float glow = smoothstep(0.8, 0.0, mouse_dist);
-    color += vec3(0.1, 0.2, 0.4) * glow * 0.3;
+    // Add a subtle vignette for depth
+    float vignette = 1.0 - length(p) * 0.3;
+    color *= vignette;
 
-    // Ambient nebulous clouds
-    for(float i = 0.0; i < 3.0; i++) {
-        vec2 uv_n = p * (1.0 + i * 0.5);
-        float t = u_time * 0.1 * (i + 1.0);
-        uv_n += vec2(sin(t + uv_n.y), cos(t + uv_n.x));
-        float noise = hash(floor(uv_n)) * 0.1;
-        color += vec3(0.05, 0.1, 0.2) * noise;
-    }
+    // Dither: breaks up 8-bit color banding in the light falloff so the
+    // gradient reads as smooth instead of stepped rings.
+    float dither = (hash(dot(gl_FragCoord.xy, vec2(12.9898, 78.233))) - 0.5) / 255.0;
+    color += dither;
 
     gl_FragColor = vec4(color, 1.0);
 }`
 
-const ShaderBackground = () => {
+const FloatingLightsBackground = () => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
 
   useEffect(() => {
@@ -151,4 +157,4 @@ const ShaderBackground = () => {
   )
 }
 
-export default ShaderBackground
+export default FloatingLightsBackground

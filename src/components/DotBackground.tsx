@@ -87,7 +87,7 @@ const DotBackground = () => {
     })
     themeObserver.observe(document.documentElement, {
       attributes: true,
-      attributeFilter: ['class'],
+      attributeFilter: ['data-theme'],
     })
 
     if (prefersReducedMotion) {

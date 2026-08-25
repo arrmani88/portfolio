@@ -1,15 +1,19 @@
 import { Outlet } from 'react-router-dom'
 // import DotBackground from '../components/DotBackground'
-import ShaderBackground from '../components/ShaderBackground'
-// import ThemeToggle from '../components/ThemeToggle'
+// import SpaceStarsBackground from '../components/SpaceStarsBackground'
+// import FloatingLightsBackground from '../components/FloatingLightsBackground'
+// import LanguageSwitcher from '../components/LanguageSwitcher'
 
 const Layout = () => {
   return (
     <>
-      <ShaderBackground />
+      {/* <SpaceStarsBackground /> */}
+      {/* <FloatingLightsBackground /> */}
+      {/* <LanguageSwitcher /> */}
       <Outlet />
     </>
   )
 }
 
 export default Layout
+
