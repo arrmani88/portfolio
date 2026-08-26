@@ -1,9 +1,12 @@
 {
   "home": {
     "title": "الرئيسية",
-    "assistantGreeting": "مرحبًا بك على متن الرحلة\nأنا مساعدك في هذه الرحلة."
+    "assistantGreeting": "مرحبًا بك\nأنا مساعدك طوال تجربتك."
   },
   "about": {
     "title": "حول"
+  },
+  "boot": {
+    "initializing": "جارٍ التهيئة"
   }
 }

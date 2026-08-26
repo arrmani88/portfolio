@@ -1,8 +1,7 @@
 .greeting {
   --reveal-color: var(--color-text);
   --reveal-smoke: var(--color-primary);
-  --reveal-duration: 1.5s;
-  --reveal-delay: .01s;
+  --reveal-duration: .5s;
   --reveal-inset: -40px;
 
   position: fixed;
@@ -20,7 +19,7 @@
   /* The real text stays in the box (for layout/sizing) but invisible -- only its
      text-shadow burst shows, the pseudo-elements below carry the actual glyphs. */
   color: transparent;
-  animation: smoke-reveal-burst var(--reveal-duration) linear var(--reveal-delay) forwards;
+  animation: smoke-reveal-burst var(--reveal-duration) linear var(--reveal-delay, 0s) forwards;
 }
 
 .greeting::before,
@@ -46,7 +45,7 @@
   color: var(--reveal-smoke);
   opacity: 0;
   filter: blur(2px);
-  animation: smoke-reveal-smoke var(--reveal-duration) linear var(--reveal-delay) forwards;
+  animation: smoke-reveal-smoke var(--reveal-duration) linear var(--reveal-delay, 0s) forwards;
 }
 
 /* resolve pass: fades in underneath as the smoke clears, carrying our own
@@ -58,7 +57,7 @@
   text-shadow:
     0 0 8px var(--color-glow),
     0 0 24px var(--color-glow);
-  animation: smoke-reveal-resolve var(--reveal-duration) linear var(--reveal-delay) forwards;
+  animation: smoke-reveal-resolve var(--reveal-duration) linear var(--reveal-delay, 0s) forwards;
 }
 
 @keyframes smoke-reveal-burst {

@@ -1,7 +1,12 @@
+import type { CSSProperties } from 'react'
 import { useTranslation } from 'react-i18next'
 import styles from './AssistantGreeting.module.css'
 
-const AssistantGreeting = () => {
+type AssistantGreetingProps = {
+  revealDelay?: string
+}
+
+const AssistantGreeting = ({ revealDelay }: AssistantGreetingProps) => {
   const { t } = useTranslation()
   const text = t('home.assistantGreeting')
 
@@ -9,7 +14,11 @@ const AssistantGreeting = () => {
   // can only pull content from an attribute, not the element's real text node) show
   // the same copy during the animation.
   return (
-    <h1 className={styles.greeting} data-text={text}>
+    <h1
+      className={styles.greeting}
+      data-text={text}
+      style={revealDelay ? ({ '--reveal-delay': revealDelay } as CSSProperties) : undefined}
+    >
       {text}
     </h1>
   )

@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react'
+import styles from './BackgroundScene.module.css'
 import { createWaveEffect } from './webgl/waveEffect'
 import { createParticleSphereEffect } from './webgl/particleSphereEffect'
 
@@ -10,7 +11,12 @@ function hexToRgb01(hex: string): [number, number, number] {
   return [r, g, b]
 }
 
-const BackgroundScene = () => {
+type BackgroundSceneProps = {
+  fadeIn?: boolean
+  fadeInDelay?: string
+}
+
+const BackgroundScene = ({ fadeIn = false, fadeInDelay = '0s' }: BackgroundSceneProps) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
 
   useEffect(() => {
@@ -48,6 +54,13 @@ const BackgroundScene = () => {
 
     let frameId = 0
     let lastRenderTime = 0
+    // requestAnimationFrame timestamps are relative to page navigation, but CSS
+    // animation-delay (used for the fadeIn/reveal timings elsewhere) counts from
+    // when each element actually mounts/paints -- a different clock, offset by
+    // however long the page took to get from navigation to this component mounting.
+    // Anchoring u_time to the first frame here instead keeps the shader's landing
+    // animation on the same clock as those CSS animations.
+    let startTime: number | null = null
     // Both effects only move with slow ambient motion, so a 30fps cap is visually
     // indistinguishable from 60/120fps here but meaningfully cuts GPU work per second.
     const minFrameInterval = 1000 / 30
@@ -56,7 +69,8 @@ const BackgroundScene = () => {
       if (t - lastRenderTime < minFrameInterval) return
       lastRenderTime = t
 
-      const time = t * 0.001
+      if (startTime === null) startTime = t
+      const time = (t - startTime) * 0.001
       const width = canvas.width
       const height = canvas.height
 
@@ -92,7 +106,8 @@ const BackgroundScene = () => {
     <canvas
       ref={canvasRef}
       aria-hidden="true"
-      className="pointer-events-none fixed inset-0 z-0 mix-blend-screen h-full w-full"
+      className={`pointer-events-none fixed inset-0 z-0 mix-blend-screen h-full w-full ${fadeIn ? styles.fadeIn : ''}`}
+      style={fadeIn ? ({ '--fade-in-delay': fadeInDelay } as React.CSSProperties) : undefined}
     />
   )
 }

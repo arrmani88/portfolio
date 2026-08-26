@@ -1,9 +1,12 @@
 {
   "home": {
     "title": "Startseite",
-    "assistantGreeting": "Willkommen an Bord\nIch bin dein Assistent auf dieser Reise."
+    "assistantGreeting": "Willkommen an Bord\nIch bin Ihr Assistent während Ihrer Erfahrung"
   },
   "about": {
     "title": "Über uns"
+  },
+  "boot": {
+    "initializing": "Initialisierung"
   }
 }

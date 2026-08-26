@@ -1,9 +1,12 @@
 {
   "home": {
     "title": "Accueil",
-    "assistantGreeting": "Bienvenue à bord\nJe suis votre assistant tout au long de ce voyage."
+    "assistantGreeting": "Bienvenue à bord\nJe suis votre assistant durant votre expérience."
   },
   "about": {
     "title": "À propos"
+  },
+  "boot": {
+    "initializing": "Initialisation"
   }
 }

@@ -1,0 +1,19 @@
+/* Applied directly to the canvas itself (never to a wrapper) -- animating opacity/
+   transform/filter on an ancestor of a position:fixed element would reparent its
+   containing block and displace it, so the reveal lives on the fixed element itself. */
+.fadeIn {
+  opacity: 0;
+  animation: background-scene-fade-in 1.4s ease-out forwards;
+  animation-delay: var(--fade-in-delay, 0s);
+}
+
+@keyframes background-scene-fade-in {
+  from {
+    opacity: 0;
+    filter: brightness(1.8);
+  }
+  to {
+    opacity: 1;
+    filter: brightness(1);
+  }
+}
