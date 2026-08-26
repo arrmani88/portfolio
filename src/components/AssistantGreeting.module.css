@@ -1,0 +1,37 @@
+.greeting {
+  position: fixed;
+  top: 28%;
+  right: 27%;
+  text-align: right;
+  margin: 0;
+  white-space: pre-line;
+  color: var(--color-text);
+  font-weight: 700;
+  font-size: clamp(2rem, 3.2vw + 1rem, 2.7rem);
+  line-height: 1.3;
+  text-shadow:
+    0 0 8px var(--color-glow),
+    0 0 24px var(--color-glow);
+  pointer-events: none;
+  z-index: 1;
+  animation: greeting-fade-in 1.4s ease-out both;
+}
+
+@keyframes greeting-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 640px) {
+  .greeting {
+    top: 31%;
+    left: 5%;
+    font-size: clamp(1rem, 2vw + 0.6rem, 1rem);
+  }
+}

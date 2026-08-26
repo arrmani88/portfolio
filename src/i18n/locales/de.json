@@ -1,6 +1,7 @@
 {
   "home": {
-    "title": "Startseite"
+    "title": "Startseite",
+    "assistantGreeting": "Willkommen an Bord\nIch bin dein Assistent auf dieser Reise."
   },
   "about": {
     "title": "Über uns"

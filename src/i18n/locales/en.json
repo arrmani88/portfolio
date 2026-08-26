@@ -1,6 +1,7 @@
 {
   "home": {
-    "title": "Home"
+    "title": "Home",
+    "assistantGreeting": "Welcome aboard\nI'm your assistant on this journey."
   },
   "about": {
     "title": "About"

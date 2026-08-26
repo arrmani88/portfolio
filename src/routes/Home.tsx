@@ -1,5 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import BackgroundScene from '../components/BackgroundScene'
+import AssistantGreeting from '../components/AssistantGreeting'
 
 const Home = () => {
   const { t } = useTranslation()
@@ -7,7 +8,8 @@ const Home = () => {
   return (
     <main>
       <BackgroundScene />
-      <h1>{t('home.title')}</h1>
+      <AssistantGreeting />
+      <h2>{t('home.title')}</h2>
     </main>
   )
 }

@@ -1,5 +1,4 @@
 import { useEffect, useRef } from 'react'
-import styles from './BackgroundScene.module.css'
 import { createWaveEffect } from './webgl/waveEffect'
 import { createParticleSphereEffect } from './webgl/particleSphereEffect'
 
@@ -13,7 +12,6 @@ function hexToRgb01(hex: string): [number, number, number] {
 
 const BackgroundScene = () => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
-  const coreRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -65,12 +63,10 @@ const BackgroundScene = () => {
       // The wave pass writes an opaque color to every pixel, so it doubles as the
       // frame clear -- no separate gl.clear() needed before it.
       waveEffect.draw(time, width, height)
-      const jump = sphereEffect.draw(time, width, height)
-
-      if (coreRef.current) {
-        const jumpPx = jump * (Math.min(width, height) / 2)
-        coreRef.current.style.setProperty('--jump', `${jumpPx}px`)
-      }
+      // The sphere's glowing core is drawn as part of this same call (see
+      // particleSphereEffect.ts), so it always moves in lockstep with the particles --
+      // no separate DOM element or per-frame JS/CSS sync required.
+      sphereEffect.draw(time, width, height)
     }
 
     // Pause the whole render loop when the scene isn't on screen, instead of burning
@@ -93,14 +89,11 @@ const BackgroundScene = () => {
   }, [])
 
   return (
-    <>
-      <canvas
-        ref={canvasRef}
-        aria-hidden="true"
-        className="pointer-events-none fixed inset-0 z-0 mix-blend-screen h-full w-full"
-      />
-      <div ref={coreRef} className={styles.sphereCore} aria-hidden="true" />
-    </>
+    <canvas
+      ref={canvasRef}
+      aria-hidden="true"
+      className="pointer-events-none fixed inset-0 z-0 mix-blend-screen h-full w-full"
+    />
   )
 }
 

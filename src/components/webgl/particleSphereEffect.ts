@@ -43,12 +43,15 @@ void main() {
   vec3 dir = a_dir;
 
   // Sparkle layer drifts at its own slow rate, independent of the shell's rotation
-  if (a_layer > 0.5) {
+  if (a_layer > 0.5 && a_layer < 1.5) {
     float driftSpeed = (hash(a_seed + 3.0) - 0.5) * 0.5;
     dir = rotateY(dir, u_time * driftSpeed);
   }
 
-  float radius = a_radius + sin(u_time * speed + phase) * amp;
+  float radius = a_radius;
+  if (a_layer < 1.5) {
+    radius += sin(u_time * speed + phase) * amp;
+  }
 
   vec3 rotated = rotateX(rotateY(dir, u_time * 0.15), sin(u_time * 0.09) * 0.35);
   vec3 pos = rotated * radius;
@@ -81,16 +84,23 @@ void main() {
   vec3 color = themeColor(a_seed + 4.0);
   float intensity = mix(0.35, 1.0, front);
 
-  if (a_layer > 0.5) {
+  if (a_layer > 0.5 && a_layer < 1.5) {
     baseSize = 8.5;
     float twinkle = 0.4 + 0.6 * (sin(u_time * (1.5 + hash(a_seed + 5.0) * 2.0) + phase) * 0.5 + 0.5);
     intensity *= twinkle;
+  } else if (a_layer >= 1.5) {
+    // The bright core lives in this same draw call, sharing u_screenOffset/u_jump with
+    // every other particle -- it moves in perfect lockstep by construction, no separate
+    // DOM element or per-frame JS/CSS sync needed.
+    baseSize = 95.0 + sin(u_time * 0.6 + a_seed * 10.0) * 18.0;
+    color = vec3(1.0, 1.0, 1.0);
+    intensity = 0.85 + sin(u_time * 0.8 + a_seed * 6.0) * 0.15;
   }
 
   v_color = color;
   v_intensity = intensity;
 
-  gl_PointSize = clamp(baseSize * depthSize * u_pixelRatio * viewportScale, 1.0, 60.0);
+  gl_PointSize = clamp(baseSize * depthSize * u_pixelRatio * viewportScale, 1.0, 140.0);
 }`
 
 const FRAGMENT_SHADER = `precision highp float;
@@ -109,7 +119,8 @@ void main() {
 
 const SHELL_COUNT = 882
 const SPARKLE_COUNT = 258
-const TOTAL_COUNT = SHELL_COUNT + SPARKLE_COUNT
+const CORE_COUNT = 24
+const TOTAL_COUNT = SHELL_COUNT + SPARKLE_COUNT + CORE_COUNT
 
 // Evenly distributes `count` points across a unit sphere (no polar clustering).
 function fibonacciDir(i: number, count: number): [number, number, number] {
@@ -143,6 +154,14 @@ function buildParticleBuffers() {
     layers[cursor] = 1
     cursor++
   }
+  for (let i = 0; i < CORE_COUNT; i++) {
+    const [x, y, z] = fibonacciDir(i, CORE_COUNT)
+    dirs.set([x, y, z], cursor * 3)
+    radii[cursor] = Math.random() * 0.05
+    seeds[cursor] = Math.random()
+    layers[cursor] = 2
+    cursor++
+  }
   return { dirs, radii, seeds, layers }
 }
 
@@ -155,9 +174,7 @@ function compileShader(gl: WebGLRenderingContext, type: number, source: string) 
 }
 
 export type ParticleSphereEffect = {
-  // Draws the sphere for this frame and returns the current jump offset (NDC units)
-  // so the caller can apply the same value to the DOM core element.
-  draw: (time: number, width: number, height: number) => number
+  draw: (time: number, width: number, height: number) => void
 }
 
 export function createParticleSphereEffect(
@@ -240,8 +257,6 @@ export function createParticleSphereEffect(
       if (jumpLocation) gl.uniform1f(jumpLocation, jump)
 
       gl.drawArrays(gl.POINTS, 0, TOTAL_COUNT)
-
-      return jump
     },
   }
 }
