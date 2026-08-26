@@ -1,7 +1,8 @@
 {
   "home": {
     "title": "الرئيسية",
-    "assistantGreeting": "مرحبًا بك\nأنا مساعدك طوال تجربتك."
+    "assistantGreeting": "مرحبًا بك\nأنا مساعدك طوال تجربتك.",
+    "cta": "التالي"
   },
   "about": {
     "title": "حول"

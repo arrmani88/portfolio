@@ -14,9 +14,11 @@ uniform vec2 u_screenOffset;
 uniform float u_jump;
 uniform vec3 u_colorPrimary;
 uniform vec3 u_colorSecondary;
-// TEMP: landing animation, remove when no longer wanted (see introTiming.ts)
-uniform float u_convergeStart;
-uniform float u_convergeDuration;
+// TEMP: landing animation, remove when no longer wanted (see introTiming.ts).
+// Computed once per frame on the CPU (see draw() below) instead of per-vertex here
+// -- the easing curve is identical for every particle, so recomputing it ~1,164x
+// per frame in the shader was pure duplicated work for a single scalar.
+uniform float u_disperseAmount;
 
 varying vec3 v_color;
 varying float v_intensity;
@@ -62,22 +64,12 @@ void main() {
   vec3 pos = rotated * radius;
 
   // TEMP: landing animation, remove when no longer wanted. Particles start fully
-  // scattered/invisible at load and converge inward into the sphere starting at
-  // u_convergeStart (see introTiming.ts for how that's derived from BootOverlay's
-  // own timing), instead of overlapping with it, timed to line up with
-  // BackgroundScene's own canvas fade-in so the particles are actually seen flying
-  // together and brightening. Since the sphere is already literally made of
-  // individual particles, this is just extra math on values already being computed
-  // every frame, no new cost.
-  //
-  // Smoothstep easing: zero velocity at both ends, so the motion eases gently into
-  // full speed and back out at the settle instead of snapping to speed instantly --
-  // reads smoother than a one-sided ease-out.
-  float convergeRaw = clamp((u_time - u_convergeStart) / u_convergeDuration, 0.0, 1.0);
-  float convergeEaseOut = convergeRaw * convergeRaw * (3.0 - 2.0 * convergeRaw);
-  float disperseAmount = 1.0 - convergeEaseOut;
-  pos += rotated * disperseAmount * 4.5;
-  float explodeFade = 1.0 - disperseAmount;
+  // scattered/invisible at load and converge inward into the sphere (see
+  // introTiming.ts and draw() below for the timing/easing this comes from),
+  // timed to line up with BackgroundScene's own canvas fade-in so the particles
+  // are actually seen flying together and brightening.
+  pos += rotated * u_disperseAmount * 4.5;
+  float explodeFade = 1.0 - u_disperseAmount;
 
   // Real perspective: a camera sits u_cameraDistance away looking at the sphere.
   // Particles nearer the camera (larger pos.z) project bigger and get a bigger
@@ -127,7 +119,7 @@ void main() {
   // TEMP: explode/disperse effect, remove when no longer wanted
   v_intensity = intensity * explodeFade;
 
-  gl_PointSize = clamp(baseSize * depthSize * u_pixelRatio * viewportScale, 1.0, 140.0) * mix(1.0, 0.4, disperseAmount);
+  gl_PointSize = clamp(baseSize * depthSize * u_pixelRatio * viewportScale, 1.0, 140.0) * mix(1.0, 0.4, u_disperseAmount);
 }`
 
 const FRAGMENT_SHADER = `precision highp float;
@@ -247,8 +239,7 @@ export function createParticleSphereEffect(
   const colorPrimaryLocation = gl.getUniformLocation(program, 'u_colorPrimary')
   const colorSecondaryLocation = gl.getUniformLocation(program, 'u_colorSecondary')
   // TEMP: landing animation, remove when no longer wanted
-  const convergeStartLocation = gl.getUniformLocation(program, 'u_convergeStart')
-  const convergeDurationLocation = gl.getUniformLocation(program, 'u_convergeDuration')
+  const disperseAmountLocation = gl.getUniformLocation(program, 'u_disperseAmount')
 
   gl.useProgram(program)
   // These never change frame to frame, so they're uploaded once instead of every frame
@@ -258,8 +249,6 @@ export function createParticleSphereEffect(
   if (screenOffsetLocation) gl.uniform2f(screenOffsetLocation, 0.6, 0.3)
   if (colorPrimaryLocation) gl.uniform3f(colorPrimaryLocation, ...colorPrimary)
   if (colorSecondaryLocation) gl.uniform3f(colorSecondaryLocation, ...colorSecondary)
-  if (convergeStartLocation) gl.uniform1f(convergeStartLocation, SPHERE_CONVERGE_START_S)
-  if (convergeDurationLocation) gl.uniform1f(convergeDurationLocation, SPHERE_CONVERGE_DURATION_S)
 
   const bindAttribute = (buffer: WebGLBuffer | null, location: number, size: number) => {
     gl.bindBuffer(gl.ARRAY_BUFFER, buffer)
@@ -287,6 +276,15 @@ export function createParticleSphereEffect(
       // apex, then rebounds quickly at the bottom -- fully smooth, no popping or resets.
       const jump = Math.abs(Math.sin(time * 1.2)) * 0.035
       if (jumpLocation) gl.uniform1f(jumpLocation, jump)
+
+      // TEMP: landing animation, remove when no longer wanted. Smoothstep easing:
+      // zero velocity at both ends, so particles ease gently into motion and settle
+      // smoothly instead of snapping to speed instantly. Computed once here (identical
+      // for every particle) instead of per-vertex in the shader.
+      const convergeRaw = Math.min(Math.max((time - SPHERE_CONVERGE_START_S) / SPHERE_CONVERGE_DURATION_S, 0), 1)
+      const convergeEaseOut = convergeRaw * convergeRaw * (3 - 2 * convergeRaw)
+      const disperseAmount = 1 - convergeEaseOut
+      if (disperseAmountLocation) gl.uniform1f(disperseAmountLocation, disperseAmount)
 
       gl.drawArrays(gl.POINTS, 0, TOTAL_COUNT)
     },

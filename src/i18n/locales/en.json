@@ -1,7 +1,8 @@
 {
   "home": {
     "title": "Home",
-    "assistantGreeting": "Welcome aboard\nI'm your assistant throughout your experience"
+    "assistantGreeting": "Welcome aboard\nI'm your assistant throughout your experience",
+    "cta": "Next"
   },
   "about": {
     "title": "About"

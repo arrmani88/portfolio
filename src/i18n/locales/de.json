@@ -1,7 +1,8 @@
 {
   "home": {
     "title": "Startseite",
-    "assistantGreeting": "Willkommen an Bord\nIch bin Ihr Assistent während Ihrer Erfahrung"
+    "assistantGreeting": "Willkommen an Bord\nIch bin Ihr Assistent während Ihrer Erfahrung",
+    "cta": "Weiter"
   },
   "about": {
     "title": "Über uns"

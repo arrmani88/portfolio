@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react'
+import type { CSSProperties } from 'react'
 import styles from './BackgroundScene.module.css'
 import { createWaveEffect } from './webgl/waveEffect'
 import { createParticleSphereEffect } from './webgl/particleSphereEffect'
@@ -107,7 +108,7 @@ const BackgroundScene = ({ fadeIn = false, fadeInDelay = '0s' }: BackgroundScene
       ref={canvasRef}
       aria-hidden="true"
       className={`pointer-events-none fixed inset-0 z-0 mix-blend-screen h-full w-full ${fadeIn ? styles.fadeIn : ''}`}
-      style={fadeIn ? ({ '--fade-in-delay': fadeInDelay } as React.CSSProperties) : undefined}
+      style={fadeIn ? ({ '--fade-in-delay': fadeInDelay } as CSSProperties) : undefined}
     />
   )
 }

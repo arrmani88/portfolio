@@ -1,0 +1,100 @@
+.button {
+  position: fixed;
+  top: 46%;
+  right: 27%;
+  z-index: 1;
+
+  display: inline-flex;
+  align-items: center;
+  padding: 0.85em 2.2em;
+  border: 1px solid var(--color-primary);
+  clip-path: polygon(14px 0, 100% 0, 100% calc(100% - 14px), calc(100% - 14px) 100%, 0 100%, 0 14px);
+  background: transparent;
+  color: var(--color-text);
+  font-family: var(--font-primary);
+  font-weight: 700;
+  font-size: 0.95rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  cursor: pointer;
+  box-shadow: 0 0 12px var(--color-glow);
+  transition:
+    box-shadow 0.25s ease,
+    text-shadow 0.25s ease,
+    transform 0.15s ease;
+
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  animation: cta-fade-in 0.6s ease-out forwards;
+  animation-delay: var(--cta-reveal-delay, 0s);
+}
+
+.button:hover,
+.button:focus-visible {
+  /* Same glow shared by the border and the text, so both read at the same
+     brightness -- a tight+medium+wide stack for a clearer, more vivid glow. */
+  box-shadow:
+    0 0 6px var(--color-glow),
+    0 0 14px var(--color-glow),
+    0 0 28px var(--color-glow);
+  text-shadow:
+    0 0 6px var(--color-glow),
+    0 0 14px var(--color-glow),
+    0 0 28px var(--color-glow);
+  transform: translateY(-2px);
+}
+
+.button:active {
+  transform: translateY(0);
+}
+
+.chevron {
+  width: 1.1em;
+  height: 1.1em;
+  margin-inline-start: 0.6em;
+  flex-shrink: 0;
+}
+
+/* Points right by default (LTR); mirrored to point left under the app's RTL mode
+   (index.html/LanguageSwitcher set dir="rtl" on <html> for Arabic) -- margin-inline-
+   start above already flips the gap automatically, only the arrow shape needs this. */
+:global(html[dir='rtl']) .chevron {
+  transform: scaleX(-1);
+}
+
+.button:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 3px;
+}
+
+/* opacity-only transform-wise: a forwards-filled keyframe animation on `transform`
+   would keep overriding the :hover/:active transforms below even after this reveal
+   finishes, since an active (including forwards-filling) animation wins over
+   regular rules regardless of specificity.
+   visibility/pointer-events flip to their "on" values right as the fade starts (not
+   just at the end) so the button is present in the a11y tree and clickable for the
+   whole visible fade, but the base rule above keeps it hidden and inert during the
+   animation-delay countdown, before any of this has started. */
+@keyframes cta-fade-in {
+  from {
+    opacity: 0;
+    visibility: visible;
+    pointer-events: auto;
+  }
+  to {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+  }
+}
+
+@media (max-width: 640px) {
+  .button {
+    top: 42%;
+    left: 5%;
+    right: auto;
+    font-size: 0.85rem;
+    padding: 0.75em 1.8em;
+  }
+}
