@@ -1,30 +1,223 @@
 .greeting {
+  --reveal-color: var(--color-text);
+  --reveal-smoke: var(--color-primary);
+  --reveal-duration: 1.5s;
+  --reveal-delay: .01s;
+  --reveal-inset: -40px;
+
   position: fixed;
-  top: 28%;
+  top: 32%;
   right: 27%;
   text-align: right;
   margin: 0;
   white-space: pre-line;
-  color: var(--color-text);
   font-weight: 700;
   font-size: clamp(2rem, 3.2vw + 1rem, 2.7rem);
   line-height: 1.3;
+  pointer-events: none;
+  z-index: 1;
+
+  /* The real text stays in the box (for layout/sizing) but invisible -- only its
+     text-shadow burst shows, the pseudo-elements below carry the actual glyphs. */
+  color: transparent;
+  animation: smoke-reveal-burst var(--reveal-duration) linear var(--reveal-delay) forwards;
+}
+
+.greeting::before,
+.greeting::after {
+  position: absolute;
+  /* Our text is right-aligned and top-flowing, not centered like the original
+     component's demo -- symmetric inset on all sides only stays visually aligned
+     for centered text. Text always starts from the box's top-right corner here
+     (right edge from text-align:right, top edge from normal block flow), so both
+     of those must stay pinned at 0; bloom room only goes on the bottom and left,
+     which don't shift where the text itself starts. */
+  inset: 0 0 var(--reveal-inset) var(--reveal-inset);
+  content: attr(data-text);
+  font: inherit;
+  letter-spacing: inherit;
+  white-space: pre-line;
+  text-align: inherit;
+}
+
+/* smoke pass: blooms outward into a soft cloud first, holds, then rapidly
+   contracts as it hands off to the resolved pass */
+.greeting::before {
+  color: var(--reveal-smoke);
+  opacity: 0;
+  filter: blur(2px);
+  animation: smoke-reveal-smoke var(--reveal-duration) linear var(--reveal-delay) forwards;
+}
+
+/* resolve pass: fades in underneath as the smoke clears, carrying our own
+   permanent glow so it's already in place once the reveal settles */
+.greeting::after {
+  color: var(--reveal-color);
+  opacity: 0;
+  filter: blur(16px);
   text-shadow:
     0 0 8px var(--color-glow),
     0 0 24px var(--color-glow);
-  pointer-events: none;
-  z-index: 1;
-  animation: greeting-fade-in 1.4s ease-out both;
+  animation: smoke-reveal-resolve var(--reveal-duration) linear var(--reveal-delay) forwards;
 }
 
-@keyframes greeting-fade-in {
-  from {
-    opacity: 0;
-    transform: translateY(8px);
+@keyframes smoke-reveal-burst {
+  0%,
+  48% {
+    text-shadow:
+      0 0 4px color-mix(in srgb, var(--reveal-color) 0%, transparent),
+      0 0 7.2px color-mix(in srgb, var(--reveal-color) 0%, transparent),
+      0 0 10.4px color-mix(in srgb, var(--reveal-color) 0%, transparent),
+      0 0 13.6px color-mix(in srgb, var(--reveal-color) 0%, transparent);
   }
-  to {
+  56% {
+    text-shadow:
+      0 0 4px color-mix(in srgb, var(--reveal-color) 90%, transparent),
+      0 0 7.2px color-mix(in srgb, var(--reveal-color) 90%, transparent),
+      0 0 10.4px color-mix(in srgb, var(--reveal-color) 90%, transparent),
+      0 0 13.6px color-mix(in srgb, var(--reveal-color) 90%, transparent);
+  }
+  62% {
+    text-shadow:
+      0 0 4px color-mix(in srgb, var(--reveal-color) 70%, transparent),
+      0 0 7.2px color-mix(in srgb, var(--reveal-color) 70%, transparent),
+      0 0 10.4px color-mix(in srgb, var(--reveal-color) 70%, transparent),
+      0 0 13.6px color-mix(in srgb, var(--reveal-color) 70%, transparent);
+  }
+  70% {
+    text-shadow:
+      0 0 4px color-mix(in srgb, var(--reveal-color) 35%, transparent),
+      0 0 7.2px color-mix(in srgb, var(--reveal-color) 35%, transparent),
+      0 0 10.4px color-mix(in srgb, var(--reveal-color) 35%, transparent),
+      0 0 13.6px color-mix(in srgb, var(--reveal-color) 35%, transparent);
+  }
+  78%,
+  100% {
+    text-shadow:
+      0 0 4px color-mix(in srgb, var(--reveal-color) 0%, transparent),
+      0 0 7.2px color-mix(in srgb, var(--reveal-color) 0%, transparent),
+      0 0 10.4px color-mix(in srgb, var(--reveal-color) 0%, transparent),
+      0 0 13.6px color-mix(in srgb, var(--reveal-color) 0%, transparent);
+  }
+}
+
+@keyframes smoke-reveal-smoke {
+  0% {
+    opacity: 0;
+    filter: blur(2px);
+  }
+  12% {
+    opacity: 0.05;
+    filter: blur(4px);
+  }
+  16% {
+    opacity: 0.08;
+    filter: blur(9px);
+  }
+  20% {
+    opacity: 0.15;
+    filter: blur(17px);
+  }
+  24% {
+    opacity: 0.18;
+    filter: blur(24px);
+  }
+  28% {
+    opacity: 0.25;
+    filter: blur(34px);
+  }
+  33% {
+    opacity: 0.3;
+    filter: blur(37px);
+  }
+  37% {
+    opacity: 0.32;
+    filter: blur(37px);
+  }
+  41% {
+    opacity: 0.38;
+    filter: blur(32px);
+  }
+  45% {
+    opacity: 0.45;
+    filter: blur(28px);
+  }
+  49% {
+    opacity: 0.52;
+    filter: blur(23px);
+  }
+  53% {
+    opacity: 0.55;
+    filter: blur(18px);
+  }
+  57% {
+    opacity: 0.5;
+    filter: blur(14px);
+  }
+  62% {
+    opacity: 0.35;
+    filter: blur(9px);
+  }
+  66% {
+    opacity: 0.2;
+    filter: blur(6px);
+  }
+  70% {
+    opacity: 0.1;
+    filter: blur(4px);
+  }
+  74% {
+    opacity: 0.03;
+    filter: blur(2px);
+  }
+  78% {
+    opacity: 0;
+    filter: blur(0px);
+  }
+  100% {
+    opacity: 0;
+    filter: blur(0px);
+  }
+}
+
+@keyframes smoke-reveal-resolve {
+  0%,
+  49% {
+    opacity: 0;
+    filter: blur(16px);
+  }
+  53% {
+    opacity: 0.12;
+    filter: blur(15px);
+  }
+  57% {
+    opacity: 0.22;
+    filter: blur(13px);
+  }
+  62% {
+    opacity: 0.32;
+    filter: blur(11px);
+  }
+  66% {
+    opacity: 0.42;
+    filter: blur(8px);
+  }
+  70% {
+    opacity: 0.58;
+    filter: blur(5px);
+  }
+  74% {
+    opacity: 0.74;
+    filter: blur(2.5px);
+  }
+  78% {
+    opacity: 0.92;
+    filter: blur(0.8px);
+  }
+  82%,
+  100% {
     opacity: 1;
-    transform: translateY(0);
+    filter: blur(0px);
   }
 }
 
@@ -32,6 +225,7 @@
   .greeting {
     top: 31%;
     left: 5%;
+    right: auto;
     font-size: clamp(1rem, 2vw + 0.6rem, 1rem);
   }
 }
