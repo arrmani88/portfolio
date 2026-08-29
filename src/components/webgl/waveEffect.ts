@@ -15,7 +15,8 @@ float hash(float n) { return fract(sin(n) * 43758.5453123); }
 
 void main() {
     vec2 p = (gl_FragCoord.xy * 2.0 - u_resolution.xy) / min(u_resolution.y, u_resolution.x);
-    p.y += 0.35; // shift the wave band down a bit
+    p.y += 0.35;
+    if (u_resolution.x < 640.0) p.y += 0.4;
 
     vec3 color = vec3(0.0);
 

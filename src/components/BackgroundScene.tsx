@@ -4,20 +4,28 @@ import styles from './BackgroundScene.module.css'
 import { createWaveEffect } from './webgl/waveEffect'
 import { createParticleSphereEffect } from './webgl/particleSphereEffect'
 
-function hexToRgb01(hex: string): [number, number, number] {
+// Falls back to a known theme color if the CSS custom property isn't readable yet
+// (e.g. a slow mobile load racing style application) -- an empty/invalid hex would
+// otherwise parse to NaN and silently render as black.
+function hexToRgb01(hex: string, fallback: [number, number, number]): [number, number, number] {
   const clean = hex.trim().replace('#', '')
   const r = parseInt(clean.substring(0, 2), 16) / 255
   const g = parseInt(clean.substring(2, 4), 16) / 255
   const b = parseInt(clean.substring(4, 6), 16) / 255
+  if (Number.isNaN(r) || Number.isNaN(g) || Number.isNaN(b)) return fallback
   return [r, g, b]
 }
 
 type BackgroundSceneProps = {
   fadeIn?: boolean
   fadeInDelay?: string
+  // TEMP: landing animation, remove when no longer wanted. Fired once, the first
+  // time the sphere's disperseAmount actually reaches (approximately) 0 -- a real
+  // completion signal instead of a separately-clocked timer guessing when it's done.
+  onSphereConverged?: () => void
 }
 
-const BackgroundScene = ({ fadeIn = false, fadeInDelay = '0s' }: BackgroundSceneProps) => {
+const BackgroundScene = ({ fadeIn = false, fadeInDelay = '0s', onSphereConverged }: BackgroundSceneProps) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
 
   useEffect(() => {
@@ -32,8 +40,8 @@ const BackgroundScene = ({ fadeIn = false, fadeInDelay = '0s' }: BackgroundScene
     if (!gl) return
 
     const rootStyle = getComputedStyle(document.documentElement)
-    const colorPrimary = hexToRgb01(rootStyle.getPropertyValue('--color-primary'))
-    const colorSecondary = hexToRgb01(rootStyle.getPropertyValue('--color-secondary'))
+    const colorPrimary = hexToRgb01(rootStyle.getPropertyValue('--color-primary'), [0, 0.941, 1])
+    const colorSecondary = hexToRgb01(rootStyle.getPropertyValue('--color-secondary'), [0.867, 0, 1])
 
     const waveEffect = createWaveEffect(gl, colorPrimary, colorSecondary)
     const sphereEffect = createParticleSphereEffect(gl, colorPrimary, colorSecondary)
@@ -55,6 +63,8 @@ const BackgroundScene = ({ fadeIn = false, fadeInDelay = '0s' }: BackgroundScene
 
     let frameId = 0
     let lastRenderTime = 0
+    // TEMP: landing animation, remove when no longer wanted
+    let hasSignaledConverged = false
     // requestAnimationFrame timestamps are relative to page navigation, but CSS
     // animation-delay (used for the fadeIn/reveal timings elsewhere) counts from
     // when each element actually mounts/paints -- a different clock, offset by
@@ -62,9 +72,10 @@ const BackgroundScene = ({ fadeIn = false, fadeInDelay = '0s' }: BackgroundScene
     // Anchoring u_time to the first frame here instead keeps the shader's landing
     // animation on the same clock as those CSS animations.
     let startTime: number | null = null
-    // Both effects only move with slow ambient motion, so a 30fps cap is visually
-    // indistinguishable from 60/120fps here but meaningfully cuts GPU work per second.
-    const minFrameInterval = 1000 / 30
+    // Capped at 60fps -- smooth on virtually all displays without uncapping fully to
+    // native refresh (100/120/144fps+), which would burn meaningfully more GPU work
+    // per second for motion this gentle without being perceptibly smoother.
+    const minFrameInterval = 1000 / 60
     const render = (t: number) => {
       frameId = requestAnimationFrame(render)
       if (t - lastRenderTime < minFrameInterval) return
@@ -81,7 +92,14 @@ const BackgroundScene = ({ fadeIn = false, fadeInDelay = '0s' }: BackgroundScene
       // The sphere's glowing core is drawn as part of this same call (see
       // particleSphereEffect.ts), so it always moves in lockstep with the particles --
       // no separate DOM element or per-frame JS/CSS sync required.
-      sphereEffect.draw(time, width, height)
+      const disperseAmount = sphereEffect.draw(time, width, height)
+
+      // TEMP: landing animation, remove when no longer wanted. Fire the real
+      // completion signal once, instead of the caller guessing from a separate timer.
+      if (!hasSignaledConverged && disperseAmount <= 0.001) {
+        hasSignaledConverged = true
+        onSphereConverged?.()
+      }
     }
 
     // Pause the whole render loop when the scene isn't on screen, instead of burning

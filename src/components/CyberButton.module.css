@@ -1,8 +1,8 @@
 .button {
-  position: fixed;
-  top: 46%;
-  right: 27%;
-  z-index: 1;
+  /* position:relative (not fixed) -- lives inside Home.module.css's
+     .calloutStack flex container, which handles the fixed positioning. Still
+     needs to be positioned itself so its ::before/::after can anchor to it. */
+  position: relative;
 
   display: inline-flex;
   align-items: center;
@@ -91,10 +91,7 @@
 
 @media (max-width: 640px) {
   .button {
-    top: 42%;
-    left: 5%;
-    right: auto;
-    font-size: 0.85rem;
-    padding: 0.75em 1.8em;
+    font-size: 0.7rem;
+    padding: 0.55em 1.3em;
   }
 }

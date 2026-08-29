@@ -1,0 +1,21 @@
+/* Lays out the greeting and CTA relative to *each other* with a fixed gap, instead
+   of each being independently position:fixed with a guessed percentage offset --
+   that meant the vertical gap between them scaled with viewport height while the
+   text's own height (rem-based) didn't, so zooming in could shrink the gap below
+   what the text actually needed and the two would overlap. */
+.calloutStack {
+  position: fixed;
+  top: 32%;
+  inset-inline-end: 27%;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 1.75rem;
+}
+
+@media (max-width: 640px) {
+  .calloutStack {
+    inset-inline-start: 5%;
+  }
+}

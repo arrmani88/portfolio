@@ -80,7 +80,9 @@ void main() {
   // for near-camera particles at full dispersion -- clamp so camDenom never gets
   // small/negative, which would otherwise spike or invert the perspective divide.
   float camDenom = max(u_cameraDistance - pos.z, 1.0);
-  float perspective = u_focalLength / camDenom;
+  // Boost focal length on narrow screens so the sphere stays visually prominent.
+  float mobileBoost = clamp(900.0 / min(u_resolution.x, u_resolution.y), 1.0, 1.8);
+  float perspective = (u_focalLength * mobileBoost) / camDenom;
 
   vec2 clip = pos.xy * perspective;
   if (u_resolution.x > u_resolution.y) {
@@ -119,7 +121,7 @@ void main() {
   // TEMP: explode/disperse effect, remove when no longer wanted
   v_intensity = intensity * explodeFade;
 
-  gl_PointSize = clamp(baseSize * depthSize * u_pixelRatio * viewportScale, 1.0, 140.0) * mix(1.0, 0.4, u_disperseAmount);
+  gl_PointSize = clamp(baseSize * depthSize * u_pixelRatio * viewportScale * mobileBoost, 1.0, 140.0) * mix(1.0, 0.4, u_disperseAmount);
 }`
 
 const FRAGMENT_SHADER = `precision highp float;
@@ -193,7 +195,10 @@ function compileShader(gl: WebGLRenderingContext, type: number, source: string) 
 }
 
 export type ParticleSphereEffect = {
-  draw: (time: number, width: number, height: number) => void
+  // Returns the current disperseAmount (1 = fully scattered, 0 = fully converged)
+  // so the caller can detect real convergence completion instead of guessing from
+  // a separate, independently-clocked timer.
+  draw: (time: number, width: number, height: number) => number
 }
 
 export function createParticleSphereEffect(
@@ -277,16 +282,20 @@ export function createParticleSphereEffect(
       const jump = Math.abs(Math.sin(time * 1.2)) * 0.035
       if (jumpLocation) gl.uniform1f(jumpLocation, jump)
 
-      // TEMP: landing animation, remove when no longer wanted. Smoothstep easing:
-      // zero velocity at both ends, so particles ease gently into motion and settle
-      // smoothly instead of snapping to speed instantly. Computed once here (identical
-      // for every particle) instead of per-vertex in the shader.
+      // TEMP: landing animation, remove when no longer wanted. Cubic ease-in-out:
+      // zero velocity at both ends with a more pronounced acceleration/deceleration
+      // than a plain smoothstep, so particles ease gently into motion, visibly
+      // speed up through the middle, then settle smoothly. Computed once here
+      // (identical for every particle) instead of per-vertex in the shader.
       const convergeRaw = Math.min(Math.max((time - SPHERE_CONVERGE_START_S) / SPHERE_CONVERGE_DURATION_S, 0), 1)
-      const convergeEaseOut = convergeRaw * convergeRaw * (3 - 2 * convergeRaw)
-      const disperseAmount = 1 - convergeEaseOut
+      const convergeEaseInOut =
+        convergeRaw < 0.5 ? 4 * convergeRaw ** 3 : 1 - (-2 * convergeRaw + 2) ** 3 / 2
+      const disperseAmount = 1 - convergeEaseInOut
       if (disperseAmountLocation) gl.uniform1f(disperseAmountLocation, disperseAmount)
 
       gl.drawArrays(gl.POINTS, 0, TOTAL_COUNT)
+
+      return disperseAmount
     },
   }
 }

@@ -23,6 +23,15 @@
   </head>
   <body>
     <div id="root"></div>
+    <!-- Covers any unstyled flash while CSS/JS are still loading; removed once the
+         page has actually finished loading -->
+    <div id="pre-load-cover" style="position: fixed; inset: 0; background: #000; z-index: 99999"></div>
+    <script>
+      window.addEventListener('load', function () {
+        var cover = document.getElementById('pre-load-cover')
+        if (cover) cover.remove()
+      })
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
