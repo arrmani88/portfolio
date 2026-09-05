@@ -11,9 +11,10 @@ export const BOOT_DONE_S = BOOT_FADE_DELAY_S + BOOT_FADE_DURATION_S
 // A bit of buffer after the boot overlay fully clears before anything else starts.
 export const SCENE_FADE_IN_DELAY_S = BOOT_DONE_S + 0.4
 
-// Synced with the canvas fade-in so the particles are actually seen converging
-// (see particleSphereEffect.ts).
-export const SPHERE_CONVERGE_START_S = SCENE_FADE_IN_DELAY_S
+// BackgroundScene now delays starting its render loop until SCENE_FADE_IN_DELAY_S
+// has passed (see startDelayMs), instead of rendering hidden frames the whole time
+// -- so its own internal clock starts at 0 right when convergence should begin.
+export const SPHERE_CONVERGE_START_S = 0.05
 export const SPHERE_CONVERGE_DURATION_S = 0.9
 export const SPHERE_CONVERGE_DONE_S = SPHERE_CONVERGE_START_S + SPHERE_CONVERGE_DURATION_S
 

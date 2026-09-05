@@ -1,3 +1,5 @@
+const WAVE_COUNT = 7
+
 const VERTEX_SHADER = `attribute vec2 a_position;
 void main() {
   gl_Position = vec4(a_position, 0.0, 1.0);
@@ -8,8 +10,10 @@ uniform float u_time;
 uniform vec2 u_resolution;
 uniform vec3 u_colorPrimary;
 uniform vec3 u_colorSecondary;
-
-const float WAVE_COUNT = 7.0;
+// freq/speed/amp/yOffset and phase/isPurple, precomputed in JS once instead of
+// per-pixel per-frame (see buildWaveParams).
+uniform vec4 u_wave[${WAVE_COUNT}];
+uniform vec2 u_wavePhaseColor[${WAVE_COUNT}];
 
 float hash(float n) { return fract(sin(n) * 43758.5453123); }
 
@@ -20,41 +24,51 @@ void main() {
 
     vec3 color = vec3(0.0);
 
-    for (float i = 0.0; i < WAVE_COUNT; i++) {
-        float seed = i * 12.9898;
-        float freq = 1.0 + hash(seed) * 2.0;
-        float speed = 0.15 + hash(seed + 1.0) * 0.25;
-        float amp = 0.06 + hash(seed + 2.0) * 0.07;
-        float yOffset = (hash(seed + 3.0) - 0.5) * 0.25;
-        float phase = hash(seed + 4.0) * 6.2831;
+    for (int i = 0; i < ${WAVE_COUNT}; i++) {
+        vec4 w = u_wave[i];
+        vec2 pc = u_wavePhaseColor[i];
 
-        float waveY = yOffset + sin(p.x * freq + u_time * speed + phase) * amp;
+        float waveY = w.w + sin(p.x * w.x + u_time * w.y + pc.x) * w.z;
         float d = abs(p.y - waveY);
 
-        // Bright thin core + soft surrounding halo (division only, no exp() —
-        // constants tuned so the peak brightness at d=0 still matches 0.05,
-        // same as the previous exp()-based version)
         float core = 0.012 / (d + 0.006);
         float halo = 0.00075 / (d * d + 0.015);
 
-        float isPurple = (i == 2.0 || i == 5.0) ? 1.0 : 0.0;
-        vec3 waveColor = mix(u_colorPrimary, u_colorSecondary, isPurple);
+        vec3 waveColor = mix(u_colorPrimary, u_colorSecondary, pc.y);
         color += waveColor * (core * 0.1 + halo);
     }
 
-    // Keep the glow confined to a middle band, fading out before the top/bottom edges
     float verticalMask = 1.0 - smoothstep(0.22, 0.45, abs(p.y));
     color *= verticalMask;
-
-    // Brighten
     color *= 1.6;
 
-    // Dither to avoid banding in the glow falloff
     float dither = (hash(dot(gl_FragCoord.xy, vec2(12.9898, 78.233))) - 0.5) / 255.0;
     color += dither;
 
     gl_FragColor = vec4(color, 1.0);
 }`
+
+function hash(n: number) {
+  const s = Math.sin(n) * 43758.5453123
+  return s - Math.floor(s)
+}
+
+function buildWaveParams() {
+  const wave: number[] = []
+  const phaseColor: number[] = []
+  for (let i = 0; i < WAVE_COUNT; i++) {
+    const seed = i * 12.9898
+    const freq = 1.0 + hash(seed) * 2.0
+    const speed = 0.15 + hash(seed + 1.0) * 0.25
+    const amp = 0.06 + hash(seed + 2.0) * 0.07
+    const yOffset = (hash(seed + 3.0) - 0.5) * 0.25
+    const phase = hash(seed + 4.0) * 6.2831
+    const isPurple = i === 2 || i === 5 ? 1.0 : 0.0
+    wave.push(freq, speed, amp, yOffset)
+    phaseColor.push(phase, isPurple)
+  }
+  return { wave: new Float32Array(wave), phaseColor: new Float32Array(phaseColor) }
+}
 
 function compileShader(gl: WebGLRenderingContext, type: number, source: string) {
   const shader = gl.createShader(type)
@@ -91,17 +105,19 @@ export function createWaveEffect(
   const resolutionLocation = gl.getUniformLocation(program, 'u_resolution')
   const colorPrimaryLocation = gl.getUniformLocation(program, 'u_colorPrimary')
   const colorSecondaryLocation = gl.getUniformLocation(program, 'u_colorSecondary')
+  const waveLocation = gl.getUniformLocation(program, 'u_wave')
+  const wavePhaseColorLocation = gl.getUniformLocation(program, 'u_wavePhaseColor')
 
   gl.useProgram(program)
-  // These never change frame to frame, so they're uploaded once instead of every frame
   if (colorPrimaryLocation) gl.uniform3f(colorPrimaryLocation, ...colorPrimary)
   if (colorSecondaryLocation) gl.uniform3f(colorSecondaryLocation, ...colorSecondary)
+  const { wave, phaseColor } = buildWaveParams()
+  if (waveLocation) gl.uniform4fv(waveLocation, wave)
+  if (wavePhaseColorLocation) gl.uniform2fv(wavePhaseColorLocation, phaseColor)
 
   return {
     draw(time, width, height) {
       gl.useProgram(program)
-      // The wave quad covers every pixel opaquely, so it doubles as this frame's clear
-      // -- draw it first, with blending off, and the particle pass composites on top.
       gl.disable(gl.BLEND)
 
       gl.bindBuffer(gl.ARRAY_BUFFER, buffer)

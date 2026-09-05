@@ -19,19 +19,45 @@ function hexToRgb01(hex: string, fallback: [number, number, number]): [number, n
 type BackgroundSceneProps = {
   fadeIn?: boolean
   fadeInDelay?: string
+  // Delays starting the WebGL context/render loop entirely, not just the CSS fade-in
+  // -- otherwise it renders every frame at full cost while fully hidden behind
+  // BootOverlay (a separate, higher z-index element the IntersectionObserver below
+  // has no way to know about).
+  startDelayMs?: number
   // TEMP: landing animation, remove when no longer wanted. Fired once, the first
   // time the sphere's disperseAmount actually reaches (approximately) 0 -- a real
   // completion signal instead of a separately-clocked timer guessing when it's done.
   onSphereConverged?: () => void
 }
 
-const BackgroundScene = ({ fadeIn = false, fadeInDelay = '0s', onSphereConverged }: BackgroundSceneProps) => {
+const BackgroundScene = ({
+  fadeIn = false,
+  fadeInDelay = '0s',
+  startDelayMs = 0,
+  onSphereConverged,
+}: BackgroundSceneProps) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
 
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
 
+    let cancelled = false
+    let cleanup: (() => void) | null = null
+
+    const timeoutId = window.setTimeout(() => {
+      if (cancelled) return
+      cleanup = setup(canvas) ?? null
+    }, startDelayMs)
+
+    return () => {
+      cancelled = true
+      clearTimeout(timeoutId)
+      cleanup?.()
+    }
+  }, [startDelayMs])
+
+  const setup = (canvas: HTMLCanvasElement) => {
     const gl = canvas.getContext('webgl', {
       depth: false,
       stencil: false,
@@ -72,10 +98,9 @@ const BackgroundScene = ({ fadeIn = false, fadeInDelay = '0s', onSphereConverged
     // Anchoring u_time to the first frame here instead keeps the shader's landing
     // animation on the same clock as those CSS animations.
     let startTime: number | null = null
-    // Capped at 60fps -- smooth on virtually all displays without uncapping fully to
-    // native refresh (100/120/144fps+), which would burn meaningfully more GPU work
-    // per second for motion this gentle without being perceptibly smoother.
-    const minFrameInterval = 1000 / 60
+    // Capped at 30fps -- this motion is gentle enough that 30fps isn't perceptibly
+    // less smooth, and it roughly halves the GPU work per second versus 60fps.
+    const minFrameInterval = 1000 / 30
     const render = (t: number) => {
       frameId = requestAnimationFrame(render)
       if (t - lastRenderTime < minFrameInterval) return
@@ -119,7 +144,7 @@ const BackgroundScene = ({ fadeIn = false, fadeInDelay = '0s', onSphereConverged
       resizeObserver.disconnect()
       intersectionObserver.disconnect()
     }
-  }, [])
+  }
 
   return (
     <canvas

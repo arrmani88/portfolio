@@ -261,6 +261,9 @@ export function createParticleSphereEffect(
     gl.vertexAttribPointer(location, size, gl.FLOAT, false, 0, 0)
   }
 
+  // TEMP: landing animation, remove when no longer wanted
+  let hasFullyConverged = false
+
   return {
     draw(time, width, height) {
       gl.useProgram(program)
@@ -282,16 +285,18 @@ export function createParticleSphereEffect(
       const jump = Math.abs(Math.sin(time * 1.2)) * 0.035
       if (jumpLocation) gl.uniform1f(jumpLocation, jump)
 
-      // TEMP: landing animation, remove when no longer wanted. Cubic ease-in-out:
-      // zero velocity at both ends with a more pronounced acceleration/deceleration
-      // than a plain smoothstep, so particles ease gently into motion, visibly
-      // speed up through the middle, then settle smoothly. Computed once here
-      // (identical for every particle) instead of per-vertex in the shader.
-      const convergeRaw = Math.min(Math.max((time - SPHERE_CONVERGE_START_S) / SPHERE_CONVERGE_DURATION_S, 0), 1)
-      const convergeEaseInOut =
-        convergeRaw < 0.5 ? 4 * convergeRaw ** 3 : 1 - (-2 * convergeRaw + 2) ** 3 / 2
-      const disperseAmount = 1 - convergeEaseInOut
-      if (disperseAmountLocation) gl.uniform1f(disperseAmountLocation, disperseAmount)
+      // TEMP: landing animation, remove when no longer wanted. Skips recomputing
+      // and re-uploading this once fully converged, since the result never changes
+      // again -- no point redoing this math and GPU upload every frame forever.
+      let disperseAmount = 0
+      if (!hasFullyConverged) {
+        const convergeRaw = Math.min(Math.max((time - SPHERE_CONVERGE_START_S) / SPHERE_CONVERGE_DURATION_S, 0), 1)
+        const convergeEaseInOut =
+          convergeRaw < 0.5 ? 4 * convergeRaw ** 3 : 1 - (-2 * convergeRaw + 2) ** 3 / 2
+        disperseAmount = 1 - convergeEaseInOut
+        if (disperseAmountLocation) gl.uniform1f(disperseAmountLocation, disperseAmount)
+        if (convergeRaw >= 1) hasFullyConverged = true
+      }
 
       gl.drawArrays(gl.POINTS, 0, TOTAL_COUNT)
 

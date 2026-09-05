@@ -23,6 +23,7 @@ const Home = () => {
       <BackgroundScene
         fadeIn
         fadeInDelay={`${SCENE_FADE_IN_DELAY_S}s`}
+        startDelayMs={SCENE_FADE_IN_DELAY_S * 1000}
         onSphereConverged={() => setSphereConverged(true)}
       />
       {sphereConverged && (
